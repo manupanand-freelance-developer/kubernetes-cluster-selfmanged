@@ -147,6 +147,11 @@ worker_instance={
                 policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSWorkerNodePolicy"]
                 volume_size=30  
           }
+           worker_node_2={
+                instance_type="t3a.medium"  #intel
+                policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSWorkerNodePolicy"]
+                volume_size=30  
+          }
     #  worker_node_2={
     #             instance_type="t3.small" #intel
     #             policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSWorkerNodePolicy"]
