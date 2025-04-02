@@ -1,0 +1,197 @@
+###########################################################################
+#  Author : MANU P ANAND : email:manupanand@outlook.com
+############################################################################
+# sudo kubeadm reset # uninstall all and reset control plane if error
+#"PS1="MASTER->"
+#crictl ps #similar to docker ps for containerd
+######################################################################################################
+
+
+# including common task
+- name: Including common task 
+  ansible.builtin.include_role:  
+    name: common 
+    tasks_from: common
+
+
+- name: Setting prompt name
+  ansible.builtin.lineinfile:
+     path: "/home/ec2-user/.bashrc"
+     line: 'export PS1="\[\e[1;31m\]\u\[\e[0m\]@\[\e[1;34m\]{{ role_name }}\[\e[0m\] \w \$ "'
+     create: true
+     mode: '0644'
+
+- name: Source bashrc
+  ansible.builtin.shell: |
+      source ~/.bashrc
+  args:
+   executable:  /bin/bash
+
+- name: Enable ports using firewalld
+  ansible.builtin.shell: "firewall-cmd --zone=public --add-port={{ item }}/tcp --permanent && firewall-cmd --reload"
+  loop: 
+    - 22 # ssh 
+    - 443 #https
+    - 6443 #kubeapiserver
+    - 179  #calico 
+    - 5473 #calico  30000-32767
+    - 8080
+
+- name: Enable port range - 30000-32767 worker
+  ansible.builtin.shell: "firewall-cmd --zone=public --add-port=30000-32767/tcp --permanent && firewall-cmd --reload" 
+- name: Enable port range - 10247-10260 etcd
+  ansible.builtin.shell: "firewall-cmd --zone=public --add-port=10247-10260/tcp --permanent && firewall-cmd --reload" 
+- name: Enable port range - 2379-2380 etcd
+  ansible.builtin.shell: "firewall-cmd --zone=public --add-port=2379-2380/tcp --permanent && firewall-cmd --reload" 
+- name: Enable port range - 4789/udp
+  ansible.builtin.shell: "firewall-cmd --zone=public --add-port=4789/udp --permanent && firewall-cmd --reload" 
+- name: Enable port range -51820-51821/udp
+  ansible.builtin.shell: "firewall-cmd --zone=public --add-port=51820-51821/udp --permanent && firewall-cmd --reload" 
+- name: Enable protocol 4
+  ansible.builtin.shell: "firewall-cmd --zone=public --add-protocol=4 --permanent && firewall-cmd --reload" 
+
+- name: Enable firewalld
+  ansible.builtin.systemd_service:
+     name: firewalld
+     state: restarted
+     enabled: true
+
+- name: Enable Containerd
+  ansible.builtin.systemd_service:
+     name: containerd
+     state: restarted
+     enabled: true
+
+- name: Restart kubelet 
+  ansible.builtin.systemd_service: 
+    name: kubelet 
+    state: restarted 
+    enabled: true 
+    daemon_reload: true 
+      
+#############################################################
+# disable swap |disk partition
+# swapoff -a #disable al swap area
+# use rhel ot ubuntu
+# sudo swapoff -a  # check commands
+# # sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+##############################################################
+
+
+######################### Only for control plane ###############################  
+- name: Install K9s 
+  ansible.builtin.unarchive: 
+   src: https://github.com/derailed/k9s/releases/download/v0.40.10/k9s_Linux_amd64.tar.gz
+   dest: "/usr/local/bin/"
+   remote_src: true
+  
+- name: Set correct permissions for K9s binary
+  ansible.builtin.file:
+    path: /usr/local/bin/k9s
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Get IP address 
+  ansible.builtin.shell:  hostname -I | awk '{print $1}' 
+  register: ip_address
+
+
+- name: Debug 
+  ansible.builtin.debug: 
+     msg: "{{ ip_address.stdout }}"
+
+- name: Generate master node token 
+  ansible.builtin.shell: "kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address={{  ip_address.stdout }} --node-name master"
+  register: token 
+
+- name: Copy token to a file 
+  ansible.builtin.copy: 
+    content: "{{ token.stdout }}"
+    dest: "/tmp/token.sh"
+    mode: '0660'
+  
+
+- name: Set up kubeconfig for ec2-user
+  ansible.builtin.shell: |
+    rm -rf $HOME/.kube || true
+    mkdir -p $HOME/.kube
+    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config
+    chmod 775 $HOME/.kube
+  args:
+    executable: /bin/bash
+  become: true
+  register: test
+  ignore_errors: true 
+
+- name: Ansible debug
+  ansible.builtin.debug: 
+    msg: "{{ test }}"
+
+- name: Restart kubelet 
+  ansible.builtin.systemd_service: 
+    name: kubelet 
+    state: restarted 
+    enabled: true 
+    daemon_reload: true 
+  
+- name: generate join token again 
+  ansible.builtin.shell:  "kubeadm token create --print-join-command"
+  register: join_command
+  ignore_errors: true  
+
+- name: Copy  and get join command 
+  ansible.builtin.copy: 
+   content: |
+      #!/bin/bash
+      echo "Executing join command"
+      {{ join_command.stdout }} 
+   dest: "/tmp/join.sh"
+   mode: '0777'
+
+- name: Kubectl debug
+  ansible.builtin.shell: kubectl get nodes 
+  register: nodes
+
+- name: debug nodes
+  ansible.builtin.debug: 
+    msg: "{{ nodes }}"
+    
+- name: Install Calico 
+  ansible.builtin.shell: |
+    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.3/manifests/tigera-operator.yaml  --validate=false
+  args: 
+    executable: /bin/bash
+  become: true
+  ignore_errors: true 
+  register: tigera
+    
+- name: Wait for Calico CRDs to be available
+  ansible.builtin.shell: |
+    until kubectl get crds | grep -q "installations.operator.tigera.io"; do
+      echo "Waiting for Calico CRDs to be created..."
+      sleep 5
+    done
+  args:
+    executable: /bin/bash
+  become: true
+  register: wait_for_crds
+  changed_when: false
+  
+- name: Install Calico 
+  ansible.builtin.shell: |
+    curl https://raw.githubusercontent.com/projectcalico/calico/v3.29.3/manifests/custom-resources.yaml -O 
+    kubectl create -f custom-resources.yaml --validate=false
+  args: 
+    executable: /bin/bash
+  ignore_errors: true 
+  register: resource
+  become: true
+
+- name: debug nodes
+  ansible.builtin.debug: 
+    msg: |
+      "{{ tigera }}"
+      "{{ wait_for_crds }}"
+      "{{ resource }}"

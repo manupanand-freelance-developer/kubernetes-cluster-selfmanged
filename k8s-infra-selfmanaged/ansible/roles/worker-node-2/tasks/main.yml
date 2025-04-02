@@ -1,0 +1,10 @@
+###########################################################################
+#  Author : MANU P ANAND : email:manupanand@outlook.com
+############################################################################
+
+
+# including common task
+- name: Including common task 
+  ansible.builtin.include_role:  
+    name: common 
+    tasks_from: common
