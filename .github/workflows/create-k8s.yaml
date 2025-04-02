@@ -22,8 +22,8 @@ jobs:
       # export TF_VAR_vault_token=${{secrets.VAULT_TOKEN}}
         run: |
           ls -la
-          #chmod +x k8s-infra-selfmanaged/modules/k8s/control-plane.sh;
-          #chmod +x k8s-infra-selfmanaged/modules/k8s/worker.sh;
+          chmod +x k8s-infra-selfmanaged/modules/k8s/control-plane.sh;
+          chmod +x k8s-infra-selfmanaged/modules/k8s/worker.sh;
           cd k8s-infra-selfmanaged;
           terraform init -backend-config=env-dev/state.tfvars ; terraform plan -var-file=env-dev/main.tfvars;terraform apply -var-file=env-dev/main.tfvars -auto-approve
         env:
