@@ -1,3 +1,3 @@
-bucket = "devops-state-manupanand-aps2"
+bucket = "devops-state-manupanand-k8s"
 key    = "k8s/dev/terraform.tfstate"
-region = "ap-south-2"
+region = "ap-south-1"
