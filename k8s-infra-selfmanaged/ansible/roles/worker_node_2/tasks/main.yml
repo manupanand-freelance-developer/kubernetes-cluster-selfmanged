@@ -72,5 +72,17 @@
   ansible.builtin.shell: | 
      /bin/bash   /tmp/join.sh
      
+- name: Set Hostname for Each Node
+  ansible.builtin.hostname:
+    name: "{{ role_name }}"
+  become: true
+
+- name: Update /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ ansible_default_ipv4.address }} {{ role_name }}"
+    state: present
+  become: true
+  
 - name: restart kubelet 
   ansible.builtin.shell: systemctl restart kubelet
