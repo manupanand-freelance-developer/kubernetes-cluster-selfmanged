@@ -19,9 +19,38 @@ A robust, reproducible setup that deploys a Kubernetes cluster (control plane + 
 
 ---
 
+# Kubernetes architecture
+
+![Kubernetes architecture](https://github.com/manupanand-freelance-developer/aws-devops/blob/main/images/kube-archi.png)
+
 ## 🧱 Architecture
+
 ```
-[GitHub Actions] → Terraform → AWS Infrastructure ↓ Ansible Provisioning ↓ Kubernetes Cluster Bootstrapped via kubeadm ↓ Calico CNI for Networking, Vault for Secrets
+┌──────────────────┐
+│  GitHub Actions  │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│     Terraform     │
+│  (AWS Resources)  │
+└────────┬─────────┘
+         ↓
+┌──────────────────┐
+│     Ansible       │
+│ (OS & K8s Setup)  │
+└────────┬─────────┘
+         ↓
+┌──────────────────────────────┐
+│   Kubernetes Cluster (kubeadm)│
+│  ┌─────────────────────────┐ │
+│  │ Control Plane & Workers │ │
+│  └─────────────────────────┘ │
+└────────┬────────────┬───────┘
+         ↓            ↓
+┌─────────────┐   ┌──────────────┐
+│  Calico CNI │   │ HashiCorp Vault │
+│ (Networking)│   │ (Secrets Mgmt)  │
+└─────────────┘   └────────────────┘
 ```
 ### ✅ Stack Details
 
@@ -41,7 +70,17 @@ A robust, reproducible setup that deploys a Kubernetes cluster (control plane + 
 
 ## 📂 Project Structure
 ```
-├── terraform/ # AWS infrastructure modules ├── ansible/ # Cluster setup and provisioning ├── github-actions/ # CI/CD workflows ├── vault/ # Vault setup and Kubernetes token storage ├── scripts/ # Helper scripts ├── README.md # This file └── LICENSE # GNU GPL v3
+kubernetes-cluster-selfmanged/
+ ├── github-actions/ # CI/CD workflows
+ |──k8s-infra-selfmanaged/
+ |  ├── env-dev/ # AWS infrastructure modules- state and var file
+ |  ├── ansible/ # Cluster setup and provisioning
+ |    |-- terraform-infra-provisoning-files
+ |  
+ |  
+ ├── README.md
+ |── LICENSE # GNU GPL v3
+ 
 ```
 
 ---
