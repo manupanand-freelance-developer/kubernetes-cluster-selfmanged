@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Define log file
-export AWS_USER=$TF_VAR_aws_user
-export AWS_PASSWORD=$TF_VAR_aws_password
-export role_name=$TF_VAR_role_name
+export AWS_USER=${AWS_USER}
+export AWS_PASSWORD=${AWS_PASSWORD}
+export role_name=${role_name}
 LOG_FILE="/var/log/startup_script.log"
 sudo touch $LOG_FILE
 sudo chmod 666 $LOG_FILE
