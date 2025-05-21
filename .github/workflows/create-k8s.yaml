@@ -14,16 +14,14 @@ jobs:
           secrets: | 
             tools/data/aws aws_user | AWS_USER;   
             tools/data/aws aws_password |AWS_PASSWORD;
-            tools/data/aws aws_ami_mumb | AWS_AMI_ID ;
+            tools/data/aws aws_ami_id | AWS_AMI_ID ;
          #   # tools/data/aws vault_token |VAULT_TOKEN # give ami id on vault
         # tools is secretengine-check api 
       - uses: actions/checkout@v4
       - name: run terraform 
       # export TF_VAR_vault_token=${{secrets.VAULT_TOKEN}}
         run: |
-          ls -la
-          #chmod +x k8s-infra-selfmanaged/modules/k8s/control-plane.sh;
-          #chmod +x k8s-infra-selfmanaged/modules/k8s/worker.sh;
+        
           cd k8s-infra-selfmanaged;
           terraform init -backend-config=env-dev/state.tfvars ; terraform plan -var-file=env-dev/main.tfvars;terraform apply -var-file=env-dev/main.tfvars -auto-approve
         env:
