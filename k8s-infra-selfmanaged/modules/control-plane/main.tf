@@ -36,7 +36,7 @@ resource "aws_instance" "instance_control_plane" {
       type     = "ssh" 
       user     = var.aws_user
       password = var.aws_password
-      host     = self.public_ip#change public
+      host     = self.private_ip
     }
 
     tags={

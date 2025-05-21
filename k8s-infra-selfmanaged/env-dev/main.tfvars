@@ -1,7 +1,6 @@
 env="dev"
-
-vpc_name     ="mumbai-vpc"
-subnet_name  ="dev-kube-1c"
+vpc_name     ="dev-private-vpc"
+subnet_name  ="dev-kube-subnet"
 
 cp_ingress={
  
@@ -133,7 +132,7 @@ worker_udp_egress={
 }
 control_plane={
     master_node_1={
-                instance_type= "m7i-flex.large"#"c6i.large"#"t3.medium"  #intel
+                instance_type= "c6i.large"#"t3.medium"  #intel
                 policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSClusterPolicy"]
                 volume_size=30  
           }
@@ -142,21 +141,11 @@ control_plane={
 
 
 worker_instance={
-    worker_node_1={
-                instance_type="c7i-flex.large"  #intel
+    worker-node-1={
+                instance_type="t3.medium"  #intel
                 policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSWorkerNodePolicy"]
                 volume_size=30  
           }
-           worker_node_2={
-                instance_type="c7i-flex.large"  #intel
-                policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSWorkerNodePolicy"]
-                volume_size=30  
-          }
-        #    worker_node_3={
-        #         instance_type="c7i-flex.large"  #intel
-        #         policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSWorkerNodePolicy"]
-        #         volume_size=30  
-        #   }
     #  worker_node_2={
     #             instance_type="t3.small" #intel
     #             policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSWorkerNodePolicy"]

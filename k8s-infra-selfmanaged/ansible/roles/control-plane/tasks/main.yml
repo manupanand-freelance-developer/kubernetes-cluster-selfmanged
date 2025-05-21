@@ -110,24 +110,38 @@
     content: "{{ token.stdout }}"
     dest: "/tmp/token.sh"
     mode: '0660'
-  
 
-- name: Set up kubeconfig for ec2-user
+- name: Restart kubelet 
+  ansible.builtin.systemd_service: 
+    name: kubelet 
+    state: restarted 
+    enabled: true 
+    daemon_reload: true 
+
+
+- name: Set up kubeconfig for ec2-user 
+  become: true
   ansible.builtin.shell: |
-    rm -rf $HOME/.kube || true
-    mkdir -p $HOME/.kube
-    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-    chown $(id -u):$(id -g) $HOME/.kube/config
-    chmod 775 $HOME/.kube
+    sudo -u ec2-user mkdir -p /home/ec2-user/.kube
+    sudo cp -i /etc/kubernetes/admin.conf /home/ec2-user/.kube/config
+    sudo chown ec2-user:ec2-user /home/ec2-user/.kube/config
+    sudo chmod 775 /home/ec2-user/.kube
   args:
     executable: /bin/bash
-  become: true
-  register: test
-  ignore_errors: true 
+  ignore_errors: true
 
-- name: Ansible debug
-  ansible.builtin.debug: 
-    msg: "{{ test }}"
+- name: Add KUBECONFIG to ec2-user's .bashrc
+  become: true
+  ansible.builtin.lineinfile:
+    path: /home/ec2-user/.bashrc
+    line: 'export KUBECONFIG=/home/ec2-user/.kube/config'
+    state: present
+    create: yes
+    owner: ec2-user
+    group: ec2-user
+  ignore_errors: true
+
+
 
 - name: Restart kubelet 
   ansible.builtin.systemd_service: 
@@ -150,48 +164,21 @@
    dest: "/tmp/join.sh"
    mode: '0777'
 
-- name: Kubectl debug
-  ansible.builtin.shell: kubectl get nodes 
-  register: nodes
+- name: Copy script file
+  ansible.builtin.copy: 
+    src: script.sh
+    dest: /tmp/script.sh
+    mode: '0777'
 
-- name: debug nodes
-  ansible.builtin.debug: 
-    msg: "{{ nodes }}"
-    
-- name: Install Calico 
-  ansible.builtin.shell: |
-    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.3/manifests/tigera-operator.yaml  --validate=false
-  args: 
-    executable: /bin/bash
+- name: Run Calico / network installation script as ec2-user
   become: true
-  ignore_errors: true 
-  register: tigera
-    
-- name: Wait for Calico CRDs to be available
-  ansible.builtin.shell: |
-    until kubectl get crds | grep -q "installations.operator.tigera.io"; do
-      echo "Waiting for Calico CRDs to be created..."
-      sleep 5
-    done
-  args:
-    executable: /bin/bash
-  become: true
-  register: wait_for_crds
-  changed_when: false
-  
-- name: Install Calico 
-  ansible.builtin.shell: |
-    curl https://raw.githubusercontent.com/projectcalico/calico/v3.29.3/manifests/custom-resources.yaml -O 
-    kubectl create -f custom-resources.yaml --validate=false
-  args: 
-    executable: /bin/bash
-  ignore_errors: true 
-  register: resource
-  become: true
+  become_user: ec2-user
+  ansible.builtin.shell: /tmp/script.sh
 
-- name: debug nodes
-  ansible.builtin.debug: 
-    msg: |
-      "{{ tigera }}"
-      "{{ wait_for_crds }}"
-      "{{ resource }}"
+- name: Restart kubelet 
+  ansible.builtin.systemd_service: 
+    name: kubelet 
+    state: restarted 
+    enabled: true 
+    daemon_reload: true 
+# fixed code 

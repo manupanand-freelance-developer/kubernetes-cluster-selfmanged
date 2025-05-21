@@ -66,23 +66,22 @@
     enabled: true 
     daemon_reload: true 
 
+- name: Add --node-name to kubeadm join command in script
+  lineinfile:
+    path: /tmp/join.sh
+    regexp: '^(kubeadm join .*sha256:[a-f0-9]{64})'
+    line: '\1 --node-name {{ node_name }}'
+    backrefs: yes
 
-# git pull;ansible-playbook -i localhost, -e ansible_user=ec2-user -e ansible_password=aws@SECAPPLY2025 -e role_name=control-plane  playbook.yml    -vv
+
 - name: Join control plane node 
   ansible.builtin.shell: | 
      /bin/bash   /tmp/join.sh
      
-- name: Set Hostname for Each Node
-  ansible.builtin.hostname:
-    name: "{{ role_name }}"
-  become: true
+- name: Restart kubelet 
+  ansible.builtin.systemd_service: 
+    name: kubelet 
+    state: restarted 
+    enabled: true 
+    daemon_reload: true 
 
-- name: Update /etc/hosts
-  ansible.builtin.lineinfile:
-    path: /etc/hosts
-    line: "{{ ansible_default_ipv4.address }} {{ role_name }}"
-    state: present
-  become: true
-  
-- name: restart kubelet 
-  ansible.builtin.shell: systemctl restart kubelet

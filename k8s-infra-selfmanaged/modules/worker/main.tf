@@ -26,8 +26,9 @@ resource "aws_instance" "instance_worker_node_1" {
     user_data = base64encode(templatefile("${path.module}/worker.sh",{
         AWS_USER     = var.aws_user
         AWS_PASSWORD = var.aws_password
-        role_name    = var.name
+        role_name    = "worker-node"
         remote_ip    = var.remote_ip
+        node_name         = var.name
      }))
     tags={
         Name="${var.name}-${var.env}-instance"
