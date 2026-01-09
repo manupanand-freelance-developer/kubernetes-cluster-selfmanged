@@ -1,7 +1,7 @@
 env="dev"
 vpc_name     ="singapore-vpc"
 subnet_name  ="singapore-c"
-ami_id       ="ami-03a782c7db103396e"
+aws_ami_id       ="ami-011d30572a508132d" #rhel-8.10
 
 cp_ingress={
  

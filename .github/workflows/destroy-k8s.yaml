@@ -4,7 +4,7 @@ on:
 jobs:
   DEV: 
     runs-on: rhel_arm 
-    environment:
+    #environment:
     steps:
       - name: Import secrets hashicorp 
         uses: hashicorp/vault-action@v2.4.0
@@ -15,7 +15,7 @@ jobs:
           secrets: | 
             tools/data/aws aws_user | AWS_USER;   
             tools/data/aws aws_password |AWS_PASSWORD;
-            tools/data/aws aws_ami_mumb | AWS_AMI_ID  ;
+         #   tools/data/aws aws_ami_mumb | AWS_AMI_ID  ;
       - name: Destroying the Infrastructure
         run: |
          
@@ -23,7 +23,7 @@ jobs:
         env: 
           TF_VAR_aws_user: ${{secrets.AWS_USER}}
           TF_VAR_aws_password: ${{secrets.AWS_PASSWORD}}
-          TF_VAR_aws_ami_id: ${{env.AWS_AMI_ID}}
+         # TF_VAR_aws_ami_id: ${{env.AWS_AMI_ID}}
           
 
         
