@@ -11,6 +11,21 @@ resource "aws_security_group" "kube_control_plane" {
         protocol    = "TCP"
         cidr_blocks  =["0.0.0.0/0"] #cidr of default vpc
     }
+    # VXLAN (Calico)
+    ingress {
+      from_port       = 4789
+      to_port         = 4789
+      protocol        = "udp"
+      security_groups = [aws_security_group.kube_worker.id]
+    }
+    
+    # WireGuard (optional but recommended)
+    ingress {
+      from_port       = 51820
+      to_port         = 51821
+      protocol        = "udp"
+      security_groups = [aws_security_group.kube_worker.id]
+    }
 
 # kube main ports
   dynamic "ingress" {
@@ -84,7 +99,21 @@ resource "aws_security_group" "kube_worker" {
         protocol    = "TCP"
         cidr_blocks  =["0.0.0.0/0"] #cidr od fefault vpc
     }
-
+    # VXLAN (Calico)
+    ingress {
+      from_port       = 4789
+      to_port         = 4789
+      protocol        = "udp"
+      security_groups = [aws_security_group.kube_control_plane.id]
+    }
+    
+    # WireGuard
+    ingress {
+      from_port       = 51820
+      to_port         = 51821
+      protocol        = "udp"
+      security_groups = [aws_security_group.kube_control_plane.id]
+    }
     # ingress 
     dynamic "ingress" {
       for_each = var.worker_ingress
@@ -145,66 +174,66 @@ resource "aws_security_group" "kube_worker" {
 # allow security groups to communicate 
 # attach each port with security group
 
-resource "aws_vpc_security_group_ingress_rule" "general_control_plane_from_worker" {
-   depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
+# resource "aws_vpc_security_group_ingress_rule" "general_control_plane_from_worker" {
+#    depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
    
  
-  from_port                     =  6443
-  to_port                       = 65535
-  ip_protocol                   = "TCP"
-  security_group_id             = aws_security_group.kube_worker.id# the initiater worker
-  referenced_security_group_id  = aws_security_group.kube_control_plane.id#destinaton security group control plane
-}
-resource "aws_vpc_security_group_ingress_rule" "general_worker_from_control_plane" {
-   depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
+#   from_port                     =  6443
+#   to_port                       = 65535
+#   ip_protocol                   = "TCP"
+#   security_group_id             = aws_security_group.kube_worker.id# the initiater worker
+#   referenced_security_group_id  = aws_security_group.kube_control_plane.id#destinaton security group control plane
+# }
+# resource "aws_vpc_security_group_ingress_rule" "general_worker_from_control_plane" {
+#    depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
  
-  from_port                     =  6443
-  to_port                       = 10260
-  ip_protocol                   = "TCP"
-  security_group_id             = aws_security_group.kube_control_plane.id# the initiater worker
-  referenced_security_group_id  = aws_security_group.kube_worker.id#destinaton security group control plane
-}
+#   from_port                     =  6443
+#   to_port                       = 10260
+#   ip_protocol                   = "TCP"
+#   security_group_id             = aws_security_group.kube_control_plane.id# the initiater worker
+#   referenced_security_group_id  = aws_security_group.kube_worker.id#destinaton security group control plane
+# }
 
 # enabling Ip in IP protocol 4 for Calico network
 
 
-resource "aws_vpc_security_group_ingress_rule" "control_plane_from_worker" {
-   depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
+# resource "aws_vpc_security_group_ingress_rule" "control_plane_from_worker" {
+#    depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
 
-   description = "IP in IP protocol 4"
+#    description = "IP in IP protocol 4"
    
  
-  ip_protocol                   = "4"
-  security_group_id             = aws_security_group.kube_worker.id# the initiater worker
-  referenced_security_group_id  = aws_security_group.kube_control_plane.id#destinaton security group control plane
-}
-resource "aws_vpc_security_group_egress_rule" "control_plane_to_worker" {
-   depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
+#   ip_protocol                   = "4"
+#   security_group_id             = aws_security_group.kube_worker.id# the initiater worker
+#   referenced_security_group_id  = aws_security_group.kube_control_plane.id#destinaton security group control plane
+# }
+# resource "aws_vpc_security_group_egress_rule" "control_plane_to_worker" {
+#    depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
 
-   description = "IP in IP protocol 4"
+#    description = "IP in IP protocol 4"
    
 
-  ip_protocol                   = "4"
-  security_group_id             = aws_security_group.kube_control_plane.id# the initiater worker
-  referenced_security_group_id  = aws_security_group.kube_worker.id#destinaton security group control plane
-}
+#   ip_protocol                   = "4"
+#   security_group_id             = aws_security_group.kube_control_plane.id# the initiater worker
+#   referenced_security_group_id  = aws_security_group.kube_worker.id#destinaton security group control plane
+# }
 
 
-resource "aws_vpc_security_group_ingress_rule" "worker_from_control_plane" {
-   depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
+# resource "aws_vpc_security_group_ingress_rule" "worker_from_control_plane" {
+#    depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
 
-   description = "IP in IP protocol 4"
+#    description = "IP in IP protocol 4"
 
-  ip_protocol                   = "4"
-  security_group_id             = aws_security_group.kube_control_plane.id# the initiater worker whonsend 
-  referenced_security_group_id  = aws_security_group.kube_worker.id#destinaton security group control plane
-}
-resource "aws_vpc_security_group_egress_rule" "worker_to_control_plane" {
-   depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
+#   ip_protocol                   = "4"
+#   security_group_id             = aws_security_group.kube_control_plane.id# the initiater worker whonsend 
+#   referenced_security_group_id  = aws_security_group.kube_worker.id#destinaton security group control plane
+# }
+# resource "aws_vpc_security_group_egress_rule" "worker_to_control_plane" {
+#    depends_on = [ aws_security_group.kube_control_plane, aws_security_group.kube_worker ]
 
-   description = "IP in IP protocol 4"
+#    description = "IP in IP protocol 4"
 
-  ip_protocol                   = "4"
-  security_group_id             = aws_security_group.kube_worker.id# the initiater worker
-  referenced_security_group_id  = aws_security_group.kube_control_plane.id#destinaton security group control plane
-}
+#   ip_protocol                   = "4"
+#   security_group_id             = aws_security_group.kube_worker.id# the initiater worker
+#   referenced_security_group_id  = aws_security_group.kube_control_plane.id#destinaton security group control plane
+# }
