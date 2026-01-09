@@ -1,6 +1,7 @@
 env="dev"
-vpc_name     ="dev-private-vpc"
-subnet_name  ="dev-kube-subnet"
+vpc_name     ="singapore-vpc"
+subnet_name  ="singapore-c"
+ami_id       ="ami-03a782c7db103396e"
 
 cp_ingress={
  
@@ -132,7 +133,7 @@ worker_udp_egress={
 }
 control_plane={
     master_node_1={
-                instance_type= "c6i.large"#"t3.medium"  #intel
+      instance_type="t3.medium" #"c6i.large"#"t3.medium"  #intel
                 policy_name=["AmazonEC2FullAccess","AmazonSSMFullAccess","AmazonS3ReadOnlyAccess","AmazonEKSClusterPolicy"]
                 volume_size=30  
           }
