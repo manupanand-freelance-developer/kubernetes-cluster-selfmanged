@@ -11,21 +11,9 @@ resource "aws_security_group" "kube_control_plane" {
         protocol    = "TCP"
         cidr_blocks  =["0.0.0.0/0"] #cidr of default vpc
     }
-    # VXLAN (Calico)
-    ingress {
-      from_port       = 4789
-      to_port         = 4789
-      protocol        = "udp"
-      security_groups = [aws_security_group.kube_worker.id]
-    }
+
     
-    # WireGuard (optional but recommended)
-    ingress {
-      from_port       = 51820
-      to_port         = 51821
-      protocol        = "udp"
-      security_groups = [aws_security_group.kube_worker.id]
-    }
+   
 
 # kube main ports
   dynamic "ingress" {
@@ -99,21 +87,9 @@ resource "aws_security_group" "kube_worker" {
         protocol    = "TCP"
         cidr_blocks  =["0.0.0.0/0"] #cidr od fefault vpc
     }
-    # VXLAN (Calico)
-    ingress {
-      from_port       = 4789
-      to_port         = 4789
-      protocol        = "udp"
-      security_groups = [aws_security_group.kube_control_plane.id]
-    }
+   
     
-    # WireGuard
-    ingress {
-      from_port       = 51820
-      to_port         = 51821
-      protocol        = "udp"
-      security_groups = [aws_security_group.kube_control_plane.id]
-    }
+    
     # ingress 
     dynamic "ingress" {
       for_each = var.worker_ingress
@@ -166,6 +142,24 @@ resource "aws_security_group" "kube_worker" {
     }
 
 }
+
+resource "aws_security_group_rule" "cp_vxlan_from_worker" {
+  type                     = "ingress"
+  from_port                = 4789
+  to_port                  = 4789
+  protocol                 = "udp"
+  security_group_id         = aws_security_group.kube_control_plane.id
+  source_security_group_id  = aws_security_group.kube_worker.id
+}
+resource "aws_security_group_rule" "worker_vxlan_from_cp" {
+  type                     = "ingress"
+  from_port                = 4789
+  to_port                  = 4789
+  protocol                 = "udp"
+  security_group_id         = aws_security_group.kube_worker.id
+  source_security_group_id  = aws_security_group.kube_control_plane.id
+}
+
 # TCP	Inbound	10250	    Kubelet API	                Self, Control plane
 # TCP	Inbound	10256	    kube-proxy	                Self, Load balancers
 # TCP	Inbound	30000-32767	NodePort Services†	        All
