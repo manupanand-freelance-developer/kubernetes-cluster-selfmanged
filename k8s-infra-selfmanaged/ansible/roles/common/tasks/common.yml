@@ -96,164 +96,164 @@
 #sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables net.ipv4.ip_forward
 ###############################################################################################################################
 
-- name: Install runc 
-  ansible.builtin.dnf: 
-    name: runc 
-    state:  latest 
+# - name: Install runc 
+#   ansible.builtin.dnf: 
+#     name: runc 
+#     state:  latest 
 
-- name: Download and extract Containerd 
-  ansible.builtin.unarchive: 
-     src:  https://github.com/containerd/containerd/releases/download/v2.0.4/containerd-2.0.4-linux-amd64.tar.gz
-     dest: "/tmp" #check if it copy bin folder or files
-     remote_src: true
+# - name: Download and extract Containerd 
+#   ansible.builtin.unarchive: 
+#      src:  https://github.com/containerd/containerd/releases/download/v2.0.4/containerd-2.0.4-linux-amd64.tar.gz
+#      dest: "/tmp" #check if it copy bin folder or files
+#      remote_src: true
       
-- name: Copy the files containerd to usr/local/bin
-  ansible.builtin.copy: 
-    src: "/tmp/bin/"
-    dest: "/usr/local/bin/"
-    owner: root 
-    group: root 
-    mode: '0744'
+# - name: Copy the files containerd to usr/local/bin
+#   ansible.builtin.copy: 
+#     src: "/tmp/bin/"
+#     dest: "/usr/local/bin/"
+#     owner: root 
+#     group: root 
+#     mode: '0744'
 
 
-- name: Copy containerd service 
-  ansible.builtin.copy: 
-    src: containerd.service 
-    dest: /etc/systemd/system/containerd.service 
-    owner: root 
-    group: root 
+# - name: Copy containerd service 
+#   ansible.builtin.copy: 
+#     src: containerd.service 
+#     dest: /etc/systemd/system/containerd.service 
+#     owner: root 
+#     group: root 
     
 
-- name: create containerd folder /etc/containerd
-  ansible.builtin.file: 
-     path:  /etc/containerd 
-     state: directory 
-     owner: root 
-     group: root 
-     mode: '0755' 
+# - name: create containerd folder /etc/containerd
+#   ansible.builtin.file: 
+#      path:  /etc/containerd 
+#      state: directory 
+#      owner: root 
+#      group: root 
+#      mode: '0755' 
 
-- name: Copy config file to /etc/containerd 
-  ansible.builtin.copy: 
-    src: config.toml 
-    dest: /etc/containerd/config.toml  
-    owner: root 
-    group: root 
-    mode: '0644' 
+# - name: Copy config file to /etc/containerd 
+#   ansible.builtin.copy: 
+#     src: config.toml 
+#     dest: /etc/containerd/config.toml  
+#     owner: root 
+#     group: root 
+#     mode: '0644' 
     
 
-- name: Start and enable containerd service
-  ansible.builtin.systemd_service: 
-    name: containerd 
-    state: restarted 
-    enabled: true 
-    daemon_reload: true 
+# - name: Start and enable containerd service
+#   ansible.builtin.systemd_service: 
+#     name: containerd 
+#     state: restarted 
+#     enabled: true 
+#     daemon_reload: true 
  
 #####################################################################################
 # sudo sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
 # sudo systemctl status containerd
 # #######################################################3
 
-- name: Download and unarchive crictl 
-  ansible.builtin.unarchive: 
-    src: https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.32.0/crictl-v1.32.0-linux-amd64.tar.gz 
-    dest: "/usr/bin/"
-    owner: root 
-    group: root 
-    mode: '0744' 
-    remote_src: true
+# - name: Download and unarchive crictl 
+#   ansible.builtin.unarchive: 
+#     src: https://github.com/kubernetes-sigs/cri-tools/releases/download/v1.32.0/crictl-v1.32.0-linux-amd64.tar.gz 
+#     dest: "/usr/bin/"
+#     owner: root 
+#     group: root 
+#     mode: '0744' 
+#     remote_src: true
 
-- name: Copy crictl.yaml file 
-  ansible.builtin.copy: 
-    src: crictl.yaml 
-    dest: /etc/crictl.yaml 
-    owner: root 
-    group: root 
-    mode: '0644' 
+# - name: Copy crictl.yaml file 
+#   ansible.builtin.copy: 
+#     src: crictl.yaml 
+#     dest: /etc/crictl.yaml 
+#     owner: root 
+#     group: root 
+#     mode: '0644' 
     
 
-- name: Make directory for CNI 
-  ansible.builtin.file: 
-     path: /opt/cni/bin 
-     state: directory 
-     owner: root 
-     group: root 
-     mode: '0755'
+# - name: Make directory for CNI 
+#   ansible.builtin.file: 
+#      path: /opt/cni/bin 
+#      state: directory 
+#      owner: root 
+#      group: root 
+#      mode: '0755'
 
-- name: Download and unarchive CNI plugins
-  ansible.builtin.unarchive:  
-    src:  https://github.com/containernetworking/plugins/releases/download/v1.6.2/cni-plugins-linux-amd64-v1.6.2.tgz 
-    dest: "/opt/cni/bin/"
-    owner: root 
-    group: root 
-    mode: '0744' 
-    remote_src: true
+# - name: Download and unarchive CNI plugins
+#   ansible.builtin.unarchive:  
+#     src:  https://github.com/containernetworking/plugins/releases/download/v1.6.2/cni-plugins-linux-amd64-v1.6.2.tgz 
+#     dest: "/opt/cni/bin/"
+#     owner: root 
+#     group: root 
+#     mode: '0744' 
+#     remote_src: true
 
-- name: epel-release install
-  ansible.builtin.shell: dnf install -y  https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+# - name: epel-release install
+#   ansible.builtin.shell: dnf install -y  https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
   
-- name: Install dependencies   
-  ansible.builtin.dnf: 
-    name: "{{ item }}"
-    state: latest 
-  loop: 
-    - curl 
-    - gnupg2 
-    - ca-certificates 
-    - jq 
-    - htop 
+# - name: Install dependencies   
+#   ansible.builtin.dnf: 
+#     name: "{{ item }}"
+#     state: latest 
+#   loop: 
+#     - curl 
+#     - gnupg2 
+#     - ca-certificates 
+#     - jq 
+#     - htop 
 
-- name: Copy kubernetes repo 
-  ansible.builtin.copy: 
-    src: kubernetes.repo 
-    dest: /etc/yum.repos.d/kubernetes.repo 
-    owner: root 
-    group: root 
-    mode: '0644' 
+# - name: Copy kubernetes repo 
+#   ansible.builtin.copy: 
+#     src: kubernetes.repo 
+#     dest: /etc/yum.repos.d/kubernetes.repo 
+#     owner: root 
+#     group: root 
+#     mode: '0644' 
     
 
-- name: Install Kubeadm Kubectl kubelet  
-  ansible.builtin.dnf: 
-    name: "{{ item }}"
-    state: latest 
-  loop: 
-    - kubeadm 
-    - kubelet 
-    - kubectl 
-#sudo dnf versionlock add kubeadm kubectl kubelet
-# check sudo dnf versionlock list 
-- name: Ensure dnf-plugins-core installed 
-  ansible.builtin.dnf: 
-    name: dnf-plugins-core 
-    state: present  
+# - name: Install Kubeadm Kubectl kubelet  
+#   ansible.builtin.dnf: 
+#     name: "{{ item }}"
+#     state: latest 
+#   loop: 
+#     - kubeadm 
+#     - kubelet 
+#     - kubectl 
+# #sudo dnf versionlock add kubeadm kubectl kubelet
+# # check sudo dnf versionlock list 
+# - name: Ensure dnf-plugins-core installed 
+#   ansible.builtin.dnf: 
+#     name: dnf-plugins-core 
+#     state: present  
 
-- name: Install Version lock
-  ansible.builtin.yum: 
-    name: python3-dnf-plugin-versionlock
-    state: present
+# - name: Install Version lock
+#   ansible.builtin.yum: 
+#     name: python3-dnf-plugin-versionlock
+#     state: present
 
 
-- name: Hold Kubeadm kubectl kubelet 
-  ansible.builtin.shell: yum versionlock  kubeadm kubectl kubelet 
-  register: lock_status 
-  changed_when: "'added' in lock_status.stdout"
+# - name: Hold Kubeadm kubectl kubelet 
+#   ansible.builtin.shell: yum versionlock  kubeadm kubectl kubelet 
+#   register: lock_status 
+#   changed_when: "'added' in lock_status.stdout"
 
-- name: Restart kubelet 
-  ansible.builtin.systemd_service: 
-    name: kubelet 
-    state: restarted 
-    enabled: true 
-    daemon_reload: true 
+# - name: Restart kubelet 
+#   ansible.builtin.systemd_service: 
+#     name: kubelet 
+#     state: restarted 
+#     enabled: true 
+#     daemon_reload: true 
 
-- name: configure crictl 
-  ansible.builtin.command: crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock 
-  register: crictl_config 
+# - name: configure crictl 
+#   ansible.builtin.command: crictl config runtime-endpoint unix:///var/run/containerd/containerd.sock 
+#   register: crictl_config 
 
-- name: Give permission to crictl 
-  ansible.builtin.shell: chmod -R 775 /var/run/containerd
+# - name: Give permission to crictl 
+#   ansible.builtin.shell: chmod -R 775 /var/run/containerd
 
-# sudo crictl ps
+# # sudo crictl ps
 
-- name: Debug 
-  ansible.builtin.debug: 
-     msg: "{{ crictl_config.stdout }}"
+# - name: Debug 
+#   ansible.builtin.debug: 
+#      msg: "{{ crictl_config.stdout }}"
 
