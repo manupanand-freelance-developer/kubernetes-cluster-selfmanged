@@ -4,18 +4,19 @@
 # sudo kubeadm reset # uninstall all and reset control plane if error
 #"PS1="MASTER->"
 #crictl ps #similar to docker ps for containerd
+# this code is edited newly for rhel 8.10
 ######################################################################################################
-# - name: Reset Kubernetes (if re-running)
-#   ansible.builtin.shell: |
-#     kubeadm reset -f
-#     rm -rf /etc/kubernetes
-#     rm -rf /var/lib/etcd
-#     iptables -F && iptables -X
-#     systemctl restart kubelet
-#   args:
-#     executable: /bin/bash
-#   become: true
-#   ignore_errors: true 
+- name: Reset Kubernetes (if re-running)
+  ansible.builtin.shell: |
+    kubeadm reset -f
+    rm -rf /etc/kubernetes
+    rm -rf /var/lib/etcd
+    iptables -F && iptables -X
+    systemctl restart kubelet
+  args:
+    executable: /bin/bash
+  become: true
+  ignore_errors: true 
 
 - name: Install firewalld  and rsyslog , net tools
   ansible.builtin.dnf:
