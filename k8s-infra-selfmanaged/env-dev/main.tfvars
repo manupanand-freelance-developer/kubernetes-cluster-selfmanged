@@ -1,8 +1,8 @@
 env="dev"
 vpc_name     ="singapore-vpc"
 subnet_name  ="singapore-c"
-aws_ami_id       ="ami-00a3a579cfd954754"#"ami-011d30572a508132d" #rhel-8.10
-
+aws_ami_id       ="ami-00a3a579cfd954754"#rehl-aws 8.10 ami-01bd640fe6430709b#"ami-011d30572a508132d" #rhel-8.10
+#kernel 4.18.0-553.54.1.el8_10.x86_64 aws rhel -ami-01bd640fe6430709b
 cp_ingress={
  
     kube_api_server          =   {
